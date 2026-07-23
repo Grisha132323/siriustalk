@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SiriusTalk — бот-компаньон для твоей компании</title>
+<meta name="theme-color" content="#0A0D12">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0D12;
+    --bg-elev:#12161E;
+    --bg-elev-2:#181D27;
+    --red:#E2231A;
+    --red-dark:#A81810;
+    --red-soft:rgba(226,35,26,.14);
+    --gold:#F2B705;
+    --text:#F4F6F9;
+    --text-dim:#8D97A8;
+    --text-faint:#5B6472;
+    --hair:rgba(255,255,255,.09);
+    --hair-strong:rgba(255,255,255,.16);
+    --font-display:'Archivo',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --wrap:1180px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{max-width:100%;display:block;}
+  a{color:inherit;text-decoration:none;}
+  ul{margin:0;padding:0;list-style:none;}
+  section{position:relative;}
+
+  ::selection{background:var(--red);color:#fff;}
+
+  :focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
+
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 32px;}
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--red);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px;height:1px;
+    background:var(--red);
+    display:inline-block;
+  }
+
+  h1,h2,h3{
+    font-family:var(--font-display);
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:-.01em;
+    margin:0;
+    line-height:1.02;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:15px;
+    padding:15px 26px;
+    border-radius:2px;
+    border:1px solid transparent;
+    cursor:pointer;
+    transition:transform .15s ease, background .2s ease, border-color .2s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--red);color:#fff;}
+  .btn-primary:hover{background:#f0281d;}
+  .btn-ghost{border-color:var(--hair-strong);color:var(--text);background:transparent;}
+  .btn-ghost:hover{border-color:var(--text-dim);}
+
+  /* ---------- TOP UTILITY BAR ---------- */
+  .utility-bar{
+    background:#000;
+    border-bottom:1px solid var(--hair);
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:.04em;
+    color:var(--text-faint);
+  }
+  .utility-bar .wrap{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    height:34px;
+  }
+  .utility-bar a{color:var(--text-dim);transition:color .15s;}
+  .utility-bar a:hover{color:var(--gold);}
+  .utility-links{display:flex;gap:22px;}
+
+  /* ---------- MAIN NAV ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,13,18,.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--hair);
+  }
+  header.nav .wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    height:74px;
+  }
+  .logo{
+    font-family:var(--font-display);
+    font-weight:900;
+    font-size:21px;
+    letter-spacing:-.01em;
+    display:flex;align-items:center;gap:9px;
+  }
+  .logo .dot{color:var(--gold);}
+  .nav-links{display:flex;gap:34px;font-size:14.5px;font-weight:500;color:var(--text-dim);}
+  .nav-links a:hover{color:var(--text);}
+  .nav-cta{display:flex;align-items:center;gap:22px;}
+  .nav-toggle{display:none;background:none;border:none;color:var(--text);font-size:26px;cursor:pointer;}
+
+  .mobile-nav{
+    display:none;
+    flex-direction:column;
+    padding:6px 0 18px;
+    border-top:1px solid var(--hair);
+  }
+  .mobile-nav a{
+    padding:13px 32px;
+    font-size:15px;
+    font-weight:500;
+    color:var(--text-dim);
+    border-bottom:1px solid var(--hair);
+  }
+  .mobile-nav a:hover, .mobile-nav a:active{color:var(--text);}
+  .mobile-nav.open{display:flex;}
+
+  @media(max-width:860px){
+    .nav-links{display:none;}
+    .nav-toggle{display:block;}
+  }
+  @media(min-width:861px){
+    .mobile-nav{display:none !important;}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:96px 0 84px;
+    background:
+      radial-gradient(ellipse 900px 500px at 82% 12%, rgba(226,35,26,.16), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 10% 90%, rgba(242,183,5,.07), transparent 60%);
+  }
+  .hero .wrap{
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:56px;
+    align-items:center;
+  }
+  .hero h1{font-size:clamp(46px,6vw,78px);}
+  .hero h1 .accent{color:var(--red);}
+  .hero-sub{
+    font-size:17.5px;
+    color:var(--text-dim);
+    max-width:480px;
+    margin:26px 0 34px;
+  }
+  .hero-eyebrow{margin-bottom:22px;}
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:38px;}
+  .tag-row{display:flex;gap:0;flex-wrap:wrap;font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;color:var(--text-faint);}
+  .tag-row span{padding:0 16px;border-right:1px solid var(--hair);}
+  .tag-row span:first-child{padding-left:0;}
+  .tag-row span:last-child{border-right:none;}
+
+  /* phone mockup */
+  .phone{
+    justify-self:end;
+    width:320px;
+    background:var(--bg-elev);
+    border:1px solid var(--hair-strong);
+    border-radius:26px;
+    padding:14px;
+    box-shadow:0 40px 80px -20px rgba(0,0,0,.6);
+  }
+  .phone-screen{
+    background:#0D1117;
+    border-radius:16px;
+    height:520px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .phone-head{
+    display:flex;align-items:center;gap:10px;
+    padding:14px 16px;
+    border-bottom:1px solid var(--hair);
+    font-size:13px;font-weight:600;
+  }
+  .phone-head .avatar{
+    width:30px;height:30px;border-radius:50%;
+    background:linear-gradient(135deg,var(--red),var(--gold));
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-size:14px;font-weight:900;color:#0A0D12;
+  }
+  .phone-head .status{font-size:11px;color:var(--text-faint);font-weight:400;}
+  .phone-body{
+    flex:1;
+    padding:16px;
+    display:flex;flex-direction:column;gap:10px;
+    justify-content:flex-end;
+  }
+  .bubble{
+    max-width:82%;
+    padding:10px 13px;
+    border-radius:12px;
+    font-size:13px;
+    line-height:1.4;
+    opacity:0;
+    transform:translateY(8px);
+    animation:bubbleIn .5s ease forwards;
+  }
+  .bubble-bot{background:var(--bg-elev-2);border-bottom-left-radius:3px;align-self:flex-start;}
+  .bubble-user{background:var(--red-soft);border:1px solid rgba(226,35,26,.35);border-bottom-right-radius:3px;align-self:flex-end;color:#ffd7d3;}
+  @keyframes bubbleIn{to{opacity:1;transform:translateY(0);}}
+  .phone-kb{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;
+    padding:12px 16px 16px;
+    border-top:1px solid var(--hair);
+  }
+  .phone-kb button{
+    font-family:var(--font-body);
+    font-size:11px;
+    padding:9px 6px;
+    background:var(--bg-elev-2);
+    border:1px solid var(--hair);
+    border-radius:8px;
+    color:var(--text-dim);
+    cursor:default;
+  }
+
+  @media(max-width:940px){
+    .hero .wrap{
+      grid-template-columns:1fr;
+      gap:48px;
+    }
+    .phone{justify-self:center;width:min(320px,100%);}
+  }
+
+  /* ---------- SECTION HEADS ---------- */
+  .section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:24px;
+    margin-bottom:52px;
+    flex-wrap:wrap;
+  }
+  .section-head h2{font-size:clamp(30px,4vw,44px);margin-top:14px;}
+  .section-head p{color:var(--text-dim);max-width:380px;font-size:15px;}
+
+  /* ---------- FEATURES GRID ---------- */
+  .features{padding:110px 0;border-top:1px solid var(--hair);}
+  .feature-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:1px;
+    background:var(--hair);
+    border:1px solid var(--hair);
+  }
+  .feature-card{
+    background:var(--bg);
+    padding:36px 30px;
+    transition:background .2s ease;
+  }
+  .feature-card:hover{background:var(--bg-elev);}
+  .feature-card .icon{
+    font-size:26px;
+    margin-bottom:22px;
+    display:inline-block;
+  }
+  .feature-card h3{
+    font-size:16px;
+    text-transform:none;
+    font-weight:700;
+    letter-spacing:0;
+    margin-bottom:10px;
+    font-family:var(--font-body);
+  }
+  .feature-card p{
+    color:var(--text-dim);
+    font-size:14px;
+    margin:0 0 16px;
+  }
+  .xp-tag{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--gold);
+    letter-spacing:.03em;
+  }
+
+  @media(max-width:860px){
+    .feature-grid{grid-template-columns:1fr;}
+  }
+
+  /* ---------- DETAIL ROWS ---------- */
+  .detail{padding:80px 0;border-top:1px solid var(--hair);}
+  .detail .wrap{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:70px;
+    align-items:center;
+  }
+  .detail.reverse .wrap{direction:rtl;}
+  .detail.reverse .wrap > *{direction:ltr;}
+  .detail-visual{
+    background:var(--bg-elev);
+    border:1px solid var(--hair);
+    padding:34px;
+    min-height:280px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:14px;
+  }
+  .detail-copy .eyebrow{margin-bottom:18px;}
+  .detail-copy h2{font-size:clamp(26px,3.4vw,36px);margin-bottom:18px;}
+  .detail-copy p{color:var(--text-dim);font-size:15.5px;margin-bottom:22px;max-width:440px;}
+  .detail-copy ul{display:flex;flex-direction:column;gap:10px;}
+  .detail-copy li{
+    font-size:14.5px;
+    color:var(--text);
+    display:flex;
+    gap:10px;
+    align-items:baseline;
+  }
+  .detail-copy li::before{
+    content:"";
+    width:5px;height:5px;
+    background:var(--red);
+    display:inline-block;
+    flex-shrink:0;
+    transform:translateY(-2px);
+  }
+
+  .stat-row{display:flex;gap:0;border-top:1px solid var(--hair);}
+  .stat-row .stat{flex:1;padding:16px 0 0;border-right:1px solid var(--hair);}
+  .stat-row .stat:last-child{border-right:none;}
+  .stat-num{font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--gold);}
+  .stat-label{font-size:11.5px;color:var(--text-faint);margin-top:4px;}
+
+  .role-card{
+    border:1px solid var(--hair);
+    background:var(--bg);
+    padding:16px 18px;
+    font-size:13.5px;
+  }
+  .role-card b{display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:var(--red);margin-bottom:6px;text-transform:uppercase;}
+
+  @media(max-width:860px){
+    .detail .wrap{grid-template-columns:1fr;gap:36px;}
+    .detail.reverse .wrap{direction:ltr;}
+  }
+
+  /* ---------- STEPS ---------- */
+  .steps{padding:110px 0;border-top:1px solid var(--hair);background:var(--bg-elev);}
+  .step-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--hair);margin-top:52px;}
+  .step{background:var(--bg-elev);padding:40px 32px;}
+  .step .num{
+    font-family:var(--font-mono);
+    color:var(--red);
+    font-size:13px;
+    margin-bottom:20px;
+  }
+  .step h3{font-family:var(--font-body);text-transform:none;font-weight:700;font-size:17px;letter-spacing:0;margin-bottom:10px;}
+  .step p{color:var(--text-dim);font-size:14px;}
+
+  @media(max-width:860px){.step-grid{grid-template-columns:1fr;}}
+
+  /* ---------- CTA BAND ---------- */
+  .cta-band{
+    padding:100px 0;
+    background:linear-gradient(120deg, var(--red-dark), var(--red) 60%, #ff5b4e);
+    text-align:center;
+  }
+  .cta-band h2{font-size:clamp(34px,5vw,56px);color:#fff;margin-bottom:18px;}
+  .cta-band p{color:rgba(255,255,255,.85);max-width:460px;margin:0 auto 34px;font-size:16px;}
+  .cta-band .btn-primary{background:#0A0D12;}
+  .cta-band .btn-primary:hover{background:#000;}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding:70px 0 30px;border-top:1px solid var(--hair);}
+  .footer-grid{
+    display:grid;
+    grid-template-columns:1.4fr 1fr 1fr 1fr;
+    gap:40px;
+    margin-bottom:60px;
+  }
+  .footer-brand .logo{margin-bottom:14px;}
+  .footer-brand p{color:var(--text-dim);font-size:13.5px;max-width:260px;}
+  .footer-col h4{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin-bottom:16px;
+  }
+  .footer-col ul{display:flex;flex-direction:column;gap:11px;}
+  .footer-col a{font-size:14px;color:var(--text-dim);}
+  .footer-col a:hover{color:var(--text);}
+  .footer-bottom{
+    border-top:1px solid var(--hair);
+    padding-top:26px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:14px;
+    font-size:12.5px;
+    color:var(--text-faint);
+  }
+  .footer-tagline{font-family:var(--font-display);font-weight:800;text-transform:uppercase;font-size:13px;letter-spacing:.03em;color:var(--text-dim);}
+
+  @media(max-width:860px){
+    .footer-grid{grid-template-columns:1fr 1fr;}
+  }
+
+  /* ---------- SCROLL REVEAL ---------- */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1;transform:translateY(0);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important;}
+  }
+
+  /* ---------- OIL-THEMED BACKGROUND ---------- */
+  .oil-bg{
+    position:fixed;
+    top:0; left:0; right:0; bottom:0;
+    width:100%; height:100%;
+    z-index:0;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .oil-bg svg{width:100%;height:100%;display:block;}
+
+  .oil-drop{
+    position:fixed;
+    z-index:0;
+    pointer-events:none;
+    border-radius:50% 50% 50% 4%;
+    background:linear-gradient(160deg, rgba(226,35,26,.55), rgba(10,13,18,.85));
+    box-shadow:0 0 10px rgba(226,35,26,.25) inset;
+    opacity:0;
+    transform:rotate(45deg) translateY(-40px);
+    animation:oilFall 13s linear infinite;
+  }
+  @keyframes oilFall{
+    0%{opacity:0; transform:rotate(45deg) translateY(-60px);}
+    8%{opacity:.5;}
+    85%{opacity:.35;}
+    100%{opacity:0; transform:rotate(45deg) translateY(115vh);}
+  }
+
+  @media(max-width:640px){
+    .oil-drop{display:none;}
+    .oil-bg{opacity:.7;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="oil-bg" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <!-- oil derrick silhouette -->
+        <symbol id="derrick" viewBox="0 0 100 130">
+          <path d="M50 0 L50 14 M20 130 L50 14 L80 130 M32 90 L68 90 M27 108 L73 108 M10 130 L90 130 M38 60 L62 60"
+                fill="none" stroke="#E2231A" stroke-width="2.4" stroke-linecap="round"/>
+        </symbol>
+        <!-- oil droplet -->
+        <symbol id="drop" viewBox="0 0 20 36">
+          <path d="M10 0 C16 12 20 18 20 24 C20 31 15.5 36 10 36 C4.5 36 0 31 0 24 C0 18 4 12 10 0 Z"
+                fill="#E2231A"/>
+        </symbol>
+        <!-- abstract flame / energy emblem (original design, not a reproduction of any brand mark) -->
+        <symbol id="flame" viewBox="0 0 120 120">
+          <path d="M60 0 C40 30 20 45 20 75 C20 103 40 120 60 120 C80 120 100 103 100 75 C100 55 88 45 82 30
+                   C82 50 70 58 60 58 C48 58 42 48 46 32 C50 16 56 8 60 0 Z"
+                fill="#F2B705"/>
+        </symbol>
+
+        <pattern id="oilPattern" width="260" height="260" patternUnits="userSpaceOnUse" patternTransform="rotate(4)">
+          <use href="#derrick" xlink:href="#derrick" x="18" y="20" width="70" height="90" opacity=".8"/>
+          <use href="#drop" xlink:href="#drop" x="150" y="40" width="16" height="28" opacity=".9"/>
+          <use href="#drop" xlink:href="#drop" x="185" y="150" width="11" height="20" opacity=".7"/>
+          <use href="#drop" xlink:href="#drop" x="70" y="175" width="13" height="24" opacity=".6"/>
+          <use href="#derrick" xlink:href="#derrick" x="150" y="150" width="46" height="60" opacity=".55"/>
+        </pattern>
+      </defs>
+
+      <rect width="100%" height="100%" fill="url(#oilPattern)" opacity=".34"/>
+      <use href="#flame" xlink:href="#flame" x="-60" y="-40" width="460" height="460" opacity=".09"/>
+      <use href="#flame" xlink:href="#flame" x="80%" y="52%" width="520" height="520" opacity=".075"/>
+      <use href="#flame" xlink:href="#flame" x="30%" y="88%" width="380" height="380" opacity=".06"/>
+    </svg>
+  </div>
+  <div class="oil-drop" style="left:8%; width:16px; height:22px; animation-delay:0s;"></div>
+  <div class="oil-drop" style="left:22%; width:10px; height:15px; animation-delay:3.5s;"></div>
+  <div class="oil-drop" style="left:47%; width:13px; height:18px; animation-delay:7s;"></div>
+  <div class="oil-drop" style="left:68%; width:11px; height:16px; animation-delay:1.8s;"></div>
+  <div class="oil-drop" style="left:85%; width:15px; height:21px; animation-delay:9.2s;"></div>
+  <div class="oil-drop" style="left:35%; width:9px; height:13px; animation-delay:5.4s;"></div>
+
+  <div class="utility-bar">
+    <div class="wrap">
+      <div class="utility-links">
+        <a href="#features">Функции</a>
+        <a href="#games">Игры</a>
+        <a href="#start">Как начать</a>
+      </div>
+      <div class="utility-links">
+        <a href="#top">SiriusTalk Community</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="nav" id="top">
+    <div class="wrap">
+      <a href="#top" class="logo">SIRIUS<span class="dot">•</span>TALK</a>
+      <nav class="nav-links">
+        <a href="#features">Функции</a>
+        <a href="#profile">Профиль и XP</a>
+        <a href="#games">Игры</a>
+        <a href="#start">Как начать</a>
+      </nav>
+      <div class="nav-cta">
+        <a href="https://t.me/siriustalk_bot" class="btn btn-primary" style="padding:11px 20px;font-size:14px;">Открыть в Telegram</a>
+        <button class="nav-toggle" id="navToggle" aria-label="Открыть меню" aria-expanded="false" aria-controls="mobileNav">☰</button>
+      </div>
+    </div>
+    <nav class="mobile-nav" id="mobileNav">
+      <a href="#features">Функции</a>
+      <a href="#profile">Профиль и XP</a>
+      <a href="#games">Игры</a>
+      <a href="#start">Как начать</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <div class="eyebrow hero-eyebrow">TELEGRAM-БОТ ДЛЯ СВОЕЙ КОМПАНИИ</div>
+        <h1>ВСЕГДА<br><span class="accent">НА ВОЛНЕ</span></h1>
+        <p class="hero-sub">SiriusTalk — бот-компаньон для чата: анонимные сообщения, заметки с напоминаниями, «Бутылочка», «Шпион», музыкальный плейлист и система уровней. Всё в одном месте, без лишних приложений.</p>
+        <div class="hero-ctas">
+          <a href="https://t.me/siriustalk_bot" class="btn btn-primary">Открыть бота →</a>
+          <a href="#features" class="btn btn-ghost">Что он умеет</a>
+        </div>
+        <div class="tag-row">
+          <span>АНОНИМНОСТЬ</span>
+          <span>ИГРЫ</span>
+          <span>МУЗЫКА</span>
+          <span>УРОВНИ И XP</span>
+        </div>
+      </div>
+
+      <div class="phone" aria-hidden="true">
+        <div class="phone-screen">
+          <div class="phone-head">
+            <div class="avatar">S</div>
+            <div>
+              SiriusTalk
+              <div class="status">бот · онлайн</div>
+            </div>
+          </div>
+          <div class="phone-body" id="phoneBody"></div>
+          <div class="phone-kb">
+            <button>💌 Анонимка</button>
+            <button>📝 Заметки</button>
+            <button>🍾 Бутылочка</button>
+            <button>🕵️‍♂️ Шпион</button>
+            <button>🎧 Плейлист</button>
+            <button>🏆 Профиль</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <div class="eyebrow">ФУНКЦИИ</div>
+          <h2>Что умеет бот</h2>
+        </div>
+        <p>Шесть разделов, кнопками снизу — без команд и запоминания синтаксиса.</p>
+      </div>
+
+      <div class="feature-grid reveal">
+        <div class="feature-card">
+          <span class="icon">💌</span>
+          <h3>Анонимные сообщения</h3>
+          <p>Пишешь любому участнику по @username — он получает сообщение без указания отправителя и может ответить в той же анонимной цепочке.</p>
+          <div class="xp-tag">+15 XP · +10 XP за ответ</div>
+        </div>
+        <div class="feature-card">
+          <span class="icon">📝</span>
+          <h3>Заметки и напоминания</h3>
+          <p>Сохраняй текст заметки и сразу ставь таймер: через 15 минут, через час или на точное время ЧЧ:ММ.</p>
+          <div class="xp-tag">Хранится в персональном списке</div>
+        </div>
+        <div class="feature-card">
+          <span class="icon">🍾</span>
+          <h3>Игра «Бутылочка»</h3>
+          <p>Вводите имена всех участников через запятую — бот честно и случайно выбирает пару под анимацию вращения.</p>
+          <div class="xp-tag">+10 XP за партию</div>
+        </div>
+        <div class="feature-card">
+          <span class="icon">🕵️‍♂️</span>
+          <h3>Игра «Шпион»</h3>
+          <p>Один игрок получает другого персонажа из 35+ пар знаменитостей. Телефон передаётся по кругу, роли скрыты до раскрытия.</p>
+          <div class="xp-tag">+20 XP за игру</div>
+        </div>
+        <div class="feature-card">
+          <span class="icon">🎧</span>
+          <h3>Музыкальный плейлист</h3>
+          <p>Добавляйте треки и голосуйте за понравившиеся — топ-10 всегда закреплён наверху списка.</p>
+          <div class="xp-tag">+15 XP за новый трек</div>
+        </div>
+        <div class="feature-card">
+          <span class="icon">🏆</span>
+          <h3>Профиль и уровни</h3>
+          <p>Каждое действие начисляет опыт. Уровень растёт вместе с XP, а за активность открываются значки достижений.</p>
+          <div class="xp-tag">Уровень = XP ÷ 50 + 1</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="detail" id="profile">
+    <div class="wrap">
+      <div class="detail-copy reveal">
+        <div class="eyebrow">ПРОГРЕСС</div>
+        <h2>Профиль растёт вместе с активностью</h2>
+        <p>XP начисляется за каждое действие в боте: сообщение, заметку, партию в игру, добавленный трек. Уровень и значки считаются автоматически — специально ничего делать не нужно.</p>
+        <ul>
+          <li>10 XP — открывается «Новичок Бутылочки»</li>
+          <li>30 XP — открывается «Тайный Романтик»</li>
+          <li>75 XP — открывается «Меломан SiriusTalk»</li>
+          <li>150 XP — открывается «Легенда Лагеря»</li>
+        </ul>
+      </div>
+      <div class="detail-visual reveal">
+        <div class="role-card">
+          <b>Профиль пользователя</b>
+          👤 Аня<br>
+          ⚡ XP: <span style="color:var(--gold)">85</span> &nbsp; 📊 Уровень: 2
+        </div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-num">10</div><div class="stat-label">XP · БУТЫЛОЧКА</div></div>
+          <div class="stat"><div class="stat-num">30</div><div class="stat-label">XP · РОМАНТИК</div></div>
+          <div class="stat"><div class="stat-num">75</div><div class="stat-label">XP · МЕЛОМАН</div></div>
+          <div class="stat"><div class="stat-num">150</div><div class="stat-label">XP · ЛЕГЕНДА</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="detail reverse">
+    <div class="wrap">
+      <div class="detail-copy reveal">
+        <div class="eyebrow">ЛИЧНОЕ</div>
+        <h2>Анонимные сообщения — с настоящим диалогом</h2>
+        <p>Это не разовая «валентинка» без ответа: получатель может нажать «Ответить анонимно» и завязать переписку, оставаясь не раскрытым для собеседника.</p>
+        <ul>
+          <li>Отправка по @username, без раскрытия автора</li>
+          <li>Кнопка «Ответить анонимно» у каждого сообщения</li>
+          <li>Список «Кто в боте?», чтобы найти получателя</li>
+        </ul>
+      </div>
+      <div class="detail-visual reveal">
+        <div class="bubble bubble-bot" style="opacity:1;transform:none;">📩 Вам новое анонимное сообщение!<br>💬 Привет! Ты сегодня классно выступил на собрании 🙂</div>
+        <div class="bubble bubble-user" style="opacity:1;transform:none;">💬 Ответить анонимно →</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="detail" id="games">
+    <div class="wrap">
+      <div class="detail-copy reveal">
+        <div class="eyebrow">ИГРЫ ДЛЯ КОМПАНИИ</div>
+        <h2>«Бутылочка» и «Шпион» — на одном телефоне</h2>
+        <p>Обе игры рассчитаны на живую компанию: один телефон передаётся по кругу, бот следит за очередностью и честностью случайного выбора.</p>
+        <ul>
+          <li>«Бутылочка»: список игроков → анимация вращения → результат</li>
+          <li>«Шпион»: 35+ пар знаменитостей, минимум 3 игрока</li>
+          <li>Роли скрыты кнопкой «Показать» / «Скрыть и передать»</li>
+        </ul>
+      </div>
+      <div class="detail-visual reveal">
+        <div class="role-card">
+          <b>Игрок №2</b>
+          🕵️‍♂️ Ты — ШПИОН!<br>Твой персонаж: <b style="color:var(--text);text-transform:none;">Николай Басков</b>
+        </div>
+        <div class="role-card">
+          <b>Бутылочка</b>
+          💋 Аня целует Никиту!
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps" id="start">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <div class="eyebrow">НАЧАЛО РАБОТЫ</div>
+          <h2>Как начать</h2>
+        </div>
+        <p>Три шага — и бот уже готов к использованию всей компанией.</p>
+      </div>
+      <div class="step-grid reveal">
+        <div class="step">
+          <div class="num">01</div>
+          <h3>Открой бота в Telegram</h3>
+          <p>Перейди по ссылке и нажми Start — регистрация происходит автоматически.</p>
+        </div>
+        <div class="step">
+          <div class="num">02</div>
+          <h3>Получи главное меню</h3>
+          <p>Бот сохранит тебя в системе и покажет клавиатуру со всеми разделами снизу экрана.</p>
+        </div>
+        <div class="step">
+          <div class="num">03</div>
+          <h3>Выбирай раздел и копи XP</h3>
+          <p>Пиши анонимки, играй в «Бутылочку» и «Шпиона», добавляй треки — уровень растёт сам.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap reveal">
+      <h2>Присоединяйся<br>к SiriusTalk</h2>
+      <p>Один бот — вся компания. Заметки, игры, музыка и анонимность в одном чате.</p>
+      <a href="https://t.me/siriustalk_bot" class="btn btn-primary">Открыть бота в Telegram →</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#top" class="logo">SIRIUS<span class="dot">•</span>TALK</a>
+          <p>Telegram-бот для компании: анонимные сообщения, заметки, игры, музыка и система уровней.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Разделы</h4>
+          <ul>
+            <li><a href="#features">Функции</a></li>
+            <li><a href="#profile">Профиль и XP</a></li>
+            <li><a href="#games">Игры</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Информация</h4>
+          <ul>
+            <li><a href="#start">Как начать</a></li>
+            <li><a href="#features">Достижения</a></li>
+            <li><a href="#top">Наверх</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Мы на связи</h4>
+          <ul>
+            <li><a href="https://t.me/siriustalk_bot">Telegram-бот</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 SiriusTalk</span>
+        <span class="footer-tagline">SiriusTalk. Всегда на связи.</span>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  // --- Phone mockup: cycling chat screens ---
+  const screens = [
+    [
+      {who:'user', text:'/start'},
+      {who:'bot', text:'Привет, Аня! 👋 Добро пожаловать в обновлённого бота SiriusTalk! Выбери раздел кнопками снизу:'}
+    ],
+    [
+      {who:'user', text:'🏆 Мой профиль и Ачивки'},
+      {who:'bot', text:'👤 Профиль: Аня<br>⚡ XP: 85 &nbsp; 📊 Уровень: 2<br>🏅 Тайный Романтик'}
+    ],
+    [
+      {who:'user', text:'🕵️‍♂️ Игра «Шпион»'},
+      {who:'bot', text:'📱 Передайте телефон Игроку №2.<br>Убедитесь, что никто не смотрит в экран!'}
+    ],
+    [
+      {who:'user', text:'🎧 Музыкальный плейлист'},
+      {who:'bot', text:'🎵 Баста — Сансара<br>👍 Голосов: 12'}
+    ]
+  ];
+
+  const body = document.getElementById('phoneBody');
+  let screenIndex = 0;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function renderScreen(i){
+    body.innerHTML = '';
+    screens[i].forEach((msg, idx) => {
+      const el = document.createElement('div');
+      el.className = 'bubble ' + (msg.who === 'bot' ? 'bubble-bot' : 'bubble-user');
+      el.innerHTML = msg.text;
+      el.style.animationDelay = (idx * 0.35) + 's';
+      body.appendChild(el);
+    });
+  }
+
+  renderScreen(0);
+  if(!reduced){
+    setInterval(() => {
+      screenIndex = (screenIndex + 1) % screens.length;
+      renderScreen(screenIndex);
+    }, 3200);
+  }
+
+  // --- Mobile nav toggle ---
+  const navToggle = document.getElementById('navToggle');
+  const mobileNav = document.getElementById('mobileNav');
+  if(navToggle && mobileNav){
+    navToggle.addEventListener('click', () => {
+      const isOpen = mobileNav.classList.toggle('open');
+      navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      navToggle.textContent = isOpen ? '✕' : '☰';
+    });
+    mobileNav.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileNav.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        navToggle.textContent = '☰';
+      });
+    });
+  }
+
+  // --- Scroll reveal ---
+  const revealEls = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window && !reduced){
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if(e.isIntersecting){
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, {threshold:0.15});
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('in'));
+  }
+</script>
+
+</body>
+</html>
